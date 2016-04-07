@@ -6,10 +6,16 @@
 
 Storm is a wrapper and simple ORM around [BoltDB](https://github.com/boltdb/bolt). The goal of this project is to provide a simple way to save any object in BoltDB and to easily retrieve it.
 
-## Getting Started
+## Getting Started
 
 ```bash
 go get -u github.com/asdine/storm
+```
+
+For batch save support, install the Oregon Tech Ninja fork.
+
+```bash
+go get -u github.com/oregon-tech-ninja/storm
 ```
 
 ## Import Storm
@@ -94,6 +100,24 @@ err = db.Save(&user)
 That's it.
 
 `Save` creates or updates all the required indexes and buckets, checks the unique constraints and saves the object to the store.
+
+```go
+user := User{
+  ID: 10,
+  Group: "staff",
+  Email: "john@provider.com",
+  Name: "John",
+  CreatedAt: time.Now(),
+}
+
+err := db.BatchSave(&user)
+// err == nil
+
+err = db.BatchSave(&user)
+// err == "already exists"
+```
+
+`BatchSave` Performs the Save function, but with bolt's `Batch` instead of `Update` called. This way your writes are batched together when possible.
 
 ### Fetch your object
 
