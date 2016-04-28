@@ -31,21 +31,16 @@ func (n *Node) Save(data interface{}) error {
 		}
 	}
 
-	raw, err := n.s.Codec.Encode(data)
-	if err != nil {
-		return err
-	}
-
 	if n.tx != nil {
-		return n.save(n.tx, info, id, raw)
+		return n.save(n.tx, info, id, data)
 	}
 
 	return n.s.Bolt.Update(func(tx *bolt.Tx) error {
-		return n.save(tx, info, id, raw)
+		return n.save(tx, info, id, data)
 	})
 }
 
-func (n *Node) save(tx *bolt.Tx, info *modelInfo, id []byte, raw []byte) error {
+func (n *Node) save(tx *bolt.Tx, info *modelInfo, id []byte, data interface{}) error {
 	bucket, err := n.CreateBucketIfNotExists(tx, info.Name)
 	if err != nil {
 		return err
@@ -65,6 +60,21 @@ func (n *Node) save(tx *bolt.Tx, info *modelInfo, id []byte, raw []byte) error {
 		if err != nil {
 			return err
 		}
+		
+		data.ID = intID
+		
+		raw, err := n.s.Codec.Encode(data)
+		if err != nil {
+			return err
+		}
+		
+	} else {
+		
+		raw, err := n.s.Codec.Encode(data)
+		if err != nil {
+			return err
+		}
+		
 	}
 
 	for fieldName, idxInfo := range info.Indexes {
